@@ -43,7 +43,8 @@ Quantitative research and algorithmic trading models in Python: Monte Carlo proj
 quant-trading-models/
 ├── src/
 │   ├── __init__.py
-│   └── monte_carlo.py        # GBM projection, percentile bands, dark-mode chart
+│   ├── monte_carlo.py        # GBM projection, percentile bands, dark-mode chart
+│   └── data_ingestion.py     # market data fetcher (REST) + dark-mode close/volume charts
 ├── strategies/               # signal research (roadmap)
 ├── results/figures/          # generated charts
 ├── requirements.txt
@@ -71,6 +72,19 @@ python -m src.monte_carlo --ticker IBE.MC --s0 32.5 --mu 0.07 --sigma 0.22 --pat
 # figure=results/figures/projection.png
 ```
 
+### Market data ingestion
+
+Fetch daily OHLCV bars from public market REST APIs and render dark-mode close/volume charts with an SMA-20 overlay:
+
+```bash
+python -m src.data_ingestion --symbol AAPL --period 6mo
+python -m src.data_ingestion --symbol IBE.MC --period 1y --output results/figures/ibe_close.png
+# symbol=AAPL bars=128
+# first=2026-03-30 last=2026-09-30
+# last_close=336.71 annualized_vol=27.89%
+# figure=results/figures/aapl_close.png
+```
+
 ### Lint and smoke test
 
 ```bash
@@ -94,10 +108,22 @@ Monte Carlo projection of a sample asset (S0=100, μ=8%, σ=25%, 252 trading day
 
 > Figures and statistics are populated as runs complete; the smoke figure above is regenerated on every commit.
 
+### Market data (AAPL, 6 months, daily bars)
+
+![AAPL daily close](results/figures/aapl_close.png)
+
+| Metric | Value |
+|---|---:|
+| Bars ingested | 128 |
+| Last close | 336.71 |
+| Annualized volatility (log returns) | 27.89% |
+
+> Values are from the run dated 2026-09-30; regenerate with the commands above.
+
 ## Roadmap
 
+- [x] Historical data ingestion via `requests` (public market REST APIs)
 - [ ] Strategy backtesting engine (pandas-based, event-driven)
-- [ ] Historical data ingestion via `requests` (market REST APIs)
 - [ ] Portfolio risk metrics: VaR, CVaR, max drawdown
 - [ ] Option pricing: Black-Scholes vs. Monte Carlo comparison
 - [ ] HPC bridge: run large-path simulations on CESGA FinisTerrae-3
