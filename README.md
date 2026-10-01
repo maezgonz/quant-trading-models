@@ -45,7 +45,9 @@ quant-trading-models/
 │   ├── __init__.py
 │   ├── monte_carlo.py        # GBM projection, percentile bands, dark-mode chart
 │   └── data_ingestion.py     # market data fetcher (REST) + dark-mode close/volume charts
-├── strategies/               # signal research (roadmap)
+├── strategies/
+│   ├── __init__.py
+│   └── sma_crossover.py      # vectorized long/flat backtest, no lookahead bias
 ├── results/figures/          # generated charts
 ├── requirements.txt
 └── .github/workflows/ci.yml
@@ -85,6 +87,21 @@ python -m src.data_ingestion --symbol IBE.MC --period 1y --output results/figure
 # figure=results/figures/aapl_close.png
 ```
 
+### SMA crossover backtest
+
+Vectorized long/flat backtest on ingested data: positions are taken the day after the signal fires (no lookahead bias), with strategy-vs-buy&hold equity curves, entry/exit markers and risk metrics:
+
+```bash
+python -m strategies.sma_crossover --symbol AAPL --period 2y
+# symbol=AAPL fast=20 slow=50 bars=501
+# total_return=7.56%
+# buy_hold_return=47.22%
+# sharpe=0.29
+# max_drawdown=-24.74%
+# exposure=0.56
+# figure=results/figures/backtest.png
+```
+
 ### Lint and smoke test
 
 ```bash
@@ -120,10 +137,23 @@ Monte Carlo projection of a sample asset (S0=100, μ=8%, σ=25%, 252 trading day
 
 > Values are from the run dated 2026-09-30; regenerate with the commands above.
 
+### Backtest (AAPL, 2 years, SMA 20/50)
+
+![SMA crossover backtest](results/figures/backtest.png)
+
+| Metric | Strategy | Buy & hold |
+|---|---:|---:|
+| Total return | +7.56% | +47.22% |
+| Sharpe (daily, annualized) | 0.29 | — |
+| Max drawdown | -24.74% | — |
+| Market exposure | 56% | 100% |
+
+> Values are from the run dated 2026-09-30; the crossover lags strong trends — parameter studies and additional strategies are on the roadmap.
+
 ## Roadmap
 
 - [x] Historical data ingestion via `requests` (public market REST APIs)
-- [ ] Strategy backtesting engine (pandas-based, event-driven)
+- [x] Strategy backtesting engine (pandas-based, vectorized)
 - [ ] Portfolio risk metrics: VaR, CVaR, max drawdown
 - [ ] Option pricing: Black-Scholes vs. Monte Carlo comparison
 - [ ] HPC bridge: run large-path simulations on CESGA FinisTerrae-3
