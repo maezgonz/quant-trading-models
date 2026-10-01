@@ -44,11 +44,16 @@ quant-trading-models/
 ├── src/
 │   ├── __init__.py
 │   ├── monte_carlo.py        # GBM projection, percentile bands, dark-mode chart
-│   └── data_ingestion.py     # market data fetcher (REST) + dark-mode close/volume charts
+│   ├── data_ingestion.py     # market data fetcher (REST) + dark-mode close/volume charts
+│   ├── black_scholes.py      # vectorized pricing, Greeks, IV (Newton-Raphson + bisection)
+│   └── risk_metrics.py       # VaR, CVaR, Sharpe, Sortino, beta, drawdowns (dark mode)
 ├── strategies/
 │   ├── __init__.py
 │   └── sma_crossover.py      # vectorized long/flat backtest, no lookahead bias
+├── tests/
+│   └── test_black_scholes.py # unit tests against exact reference values
 ├── results/figures/          # generated charts
+├── pyproject.toml            # ruff lint config (isort first-party)
 ├── requirements.txt
 └── .github/workflows/ci.yml
 ```
@@ -102,11 +107,32 @@ python -m strategies.sma_crossover --symbol AAPL --period 2y
 # figure=results/figures/backtest.png
 ```
 
-### Lint and smoke test
+### Black-Scholes pricing and implied volatility
+
+Vectorized pricing with all first-order Greeks, expired-option boundary handling, and IV via Newton-Raphson with bisection fallback (covered by unit tests in CI):
 
 ```bash
-pip install ruff
+python -c "from src.black_scholes import bsCall, implied_volatility; print(bsCall(100, 100, 0.05, 0.5, 0.2))"
+# {'price': 6.888729..., 'delta': 0.597734..., 'gamma': ..., 'vega': ..., 'theta': ..., 'rho': ...}
+```
+
+### Risk metrics
+
+VaR, CVaR, Sharpe, Sortino, beta and drawdowns with dark-mode charts:
+
+```bash
+python -m src.risk_metrics --symbol AAPL --period 2y --benchmark SPY
+# total_return=45.56%  annualized_volatility=28.77%  sharpe_ratio=0.80
+# sortino_ratio=1.33   beta_vs_SPY=1.07  var_95=2.66%  cvar_95=4.17%
+# max_drawdown=-33.43% figure=results/figures/drawdown.png
+```
+
+### Lint, tests and smoke
+
+```bash
+pip install ruff==0.16.9 pytest
 ruff check .
+python -m pytest tests/ -q
 python -m src.monte_carlo --paths 500 --horizon 30 --output results/figures/smoke.png
 ```
 
@@ -150,12 +176,30 @@ Monte Carlo projection of a sample asset (S0=100, μ=8%, σ=25%, 252 trading day
 
 > Values are from the run dated 2026-09-30; the crossover lags strong trends — parameter studies and additional strategies are on the roadmap.
 
+### Risk metrics (AAPL, 2 years, benchmark SPY)
+
+![AAPL drawdown](results/figures/drawdown.png)
+
+| Metric | Value |
+|---|---:|
+| Total return | +45.56% |
+| Annualized volatility | 28.77% |
+| Sharpe ratio | 0.80 |
+| Sortino ratio | 1.33 |
+| Beta vs SPY | 1.07 |
+| VaR 95 (daily) | 2.66% |
+| CVaR 95 (daily) | 4.17% |
+| Max drawdown | -33.43% |
+
+> Values are from the run dated 2026-10-01; regenerate with the commands above.
+
 ## Roadmap
 
 - [x] Historical data ingestion via `requests` (public market REST APIs)
 - [x] Strategy backtesting engine (pandas-based, vectorized)
-- [ ] Portfolio risk metrics: VaR, CVaR, max drawdown
-- [ ] Option pricing: Black-Scholes vs. Monte Carlo comparison
+- [x] Portfolio risk metrics: VaR, CVaR, max drawdown
+- [x] Option pricing: Black-Scholes, Greeks and implied volatility
+- [ ] Black-Scholes vs. Monte Carlo pricing comparison
 - [ ] HPC bridge: run large-path simulations on CESGA FinisTerrae-3
 
 ## License
