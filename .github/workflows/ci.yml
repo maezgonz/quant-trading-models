@@ -14,8 +14,10 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: pip install -r requirements.txt "ruff==0.16.9"
+        run: pip install -r requirements.txt "ruff==0.16.9" pytest
       - name: Lint
         run: ruff check .
+      - name: Unit tests
+        run: python -m pytest tests/ -q
       - name: Smoke test
         run: python -m src.monte_carlo --paths 500 --horizon 30 --output results/figures/smoke.png
