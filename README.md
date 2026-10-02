@@ -46,15 +46,22 @@ quant-trading-models/
 │   ├── monte_carlo.py        # GBM projection, percentile bands, dark-mode chart
 │   ├── data_ingestion.py     # market data fetcher (REST) + dark-mode close/volume charts
 │   ├── black_scholes.py      # vectorized pricing, Greeks, IV (Newton-Raphson + bisection)
-│   └── risk_metrics.py       # VaR, CVaR, Sharpe, Sortino, beta, drawdowns (dark mode)
+│   ├── risk_metrics.py       # VaR, CVaR, Sharpe, Sortino, beta, drawdowns (dark mode)
+│   └── hpc_bridge.py         # reads C GBM engine CSV, validates vs NumPy, dark-mode plot
+├── benchmarks/
+│   ├── gbm_bands_sample.csv  # engine-format bands (placeholder until FT3 run)
+│   └── bench_black_scholes.py  # vectorized vs pure-Python pricing speedup
 ├── strategies/
 │   ├── __init__.py
 │   └── sma_crossover.py      # vectorized long/flat backtest, no lookahead bias
 ├── tests/
-│   └── test_black_scholes.py # unit tests against exact reference values
+│   ├── test_black_scholes.py # unit tests against exact reference values
+│   ├── test_monte_carlo.py   # kernel determinism and statistical sanity
+│   └── test_risk_metrics.py  # VaR/CVaR/drawdown/beta reference values
 ├── results/figures/          # generated charts
 ├── pyproject.toml            # ruff lint config (isort first-party)
 ├── requirements.txt
+├── .pre-commit-config.yaml
 └── .github/workflows/ci.yml
 ```
 
@@ -125,6 +132,28 @@ python -m src.risk_metrics --symbol AAPL --period 2y --benchmark SPY
 # total_return=45.56%  annualized_volatility=28.77%  sharpe_ratio=0.80
 # sortino_ratio=1.33   beta_vs_SPY=1.07  var_95=2.66%  cvar_95=4.17%
 # max_drawdown=-33.43% figure=results/figures/drawdown.png
+```
+
+### HPC bridge (C GBM engine -> Python)
+
+The `gbm_engine.c` OpenMP engine in [hpc-parallel-algorithms](https://github.com/maezgonz/hpc-parallel-algorithms) streams 10⁸+ paths on FinisTerrae-3 (antithetic variates, exact Welford terminal stats) and emits a bands CSV. The bridge reads that CSV, plots it in dark mode and **cross-validates against the NumPy kernel**:
+
+```bash
+# on FinisTerrae-3: sbatch slurm/gbm_engine.slurm -> benchmarks/gbm_bands.csv
+python -m src.hpc_bridge --csv benchmarks/gbm_bands_sample.csv
+# engine_paths=50,000 horizon=252
+# engine_exact_terminal_mean=108.37  engine_exact_terminal_std=27.54
+# numpy_terminal_mean=108.37         numpy_terminal_std=27.54
+# mean_rel_diff=0.00%  std_rel_diff=0.00%
+# figure=results/figures/hpc_bands.png
+```
+
+### Pricing speedup benchmark
+
+`benchmarks/bench_black_scholes.py` prices 10⁵ options with the vectorized NumPy kernel and a pure-Python legacy loop, reporting the achieved speedup:
+
+```bash
+python -m benchmarks.bench_black_scholes
 ```
 
 ### Lint, tests and smoke
@@ -199,8 +228,9 @@ Monte Carlo projection of a sample asset (S0=100, μ=8%, σ=25%, 252 trading day
 - [x] Strategy backtesting engine (pandas-based, vectorized)
 - [x] Portfolio risk metrics: VaR, CVaR, max drawdown
 - [x] Option pricing: Black-Scholes, Greeks and implied volatility
+- [x] HPC bridge: C GBM engine cross-validated against the NumPy kernel
 - [ ] Black-Scholes vs. Monte Carlo pricing comparison
-- [ ] HPC bridge: run large-path simulations on CESGA FinisTerrae-3
+- [ ] Large-path FinisTerrae-3 runs feeding the bridge end to end
 
 ## License
 
