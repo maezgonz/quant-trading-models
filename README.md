@@ -49,7 +49,8 @@ quant-trading-models/
 │   ├── risk_metrics.py       # VaR, CVaR, Sharpe, Sortino, beta, drawdowns (dark mode)
 │   └── hpc_bridge.py         # reads C GBM engine CSV, validates vs NumPy, dark-mode plot
 ├── benchmarks/
-│   ├── gbm_bands_sample.csv  # engine-format bands (placeholder until FT3 run)
+│   ├── gbm_bands_ft3.csv     # REAL bands from the 10^9-path FT3 run
+│   ├── gbm_bands_sample.csv  # engine-format sample (bridge demo)
 │   └── bench_black_scholes.py  # vectorized vs pure-Python pricing speedup
 ├── strategies/
 │   ├── __init__.py
@@ -136,17 +137,21 @@ python -m src.risk_metrics --symbol AAPL --period 2y --benchmark SPY
 
 ### HPC bridge (C GBM engine -> Python)
 
-The `gbm_engine.c` OpenMP engine in [hpc-parallel-algorithms](https://github.com/maezgonz/hpc-parallel-algorithms) streams 10⁸+ paths on FinisTerrae-3 (antithetic variates, exact Welford terminal stats) and emits a bands CSV. The bridge reads that CSV, plots it in dark mode and **cross-validates against the NumPy kernel**:
+The `gbm_engine.c` OpenMP engine in [hpc-parallel-algorithms](https://github.com/maezgonz/hpc-parallel-algorithms) streams 10⁹+ paths on FinisTerrae-3 (antithetic variates, exact Welford terminal stats) and emits a bands CSV. The bridge reads that CSV, plots it in dark mode and **cross-validates against the NumPy kernel**:
 
 ```bash
 # on FinisTerrae-3: sbatch slurm/gbm_engine.slurm -> benchmarks/gbm_bands.csv
-python -m src.hpc_bridge --csv benchmarks/gbm_bands_sample.csv
-# engine_paths=50,000 horizon=252
-# engine_exact_terminal_mean=108.37  engine_exact_terminal_std=27.54
-# numpy_terminal_mean=108.37         numpy_terminal_std=27.54
-# mean_rel_diff=0.00%  std_rel_diff=0.00%
-# figure=results/figures/hpc_bands.png
+python -m src.hpc_bridge --csv benchmarks/gbm_bands_ft3.csv --paths 200000
+# engine_paths=1,000,000,000 horizon=252
+# engine_exact_terminal_mean=108.33  engine_exact_terminal_std=27.51
+# numpy_terminal_mean=108.41         numpy_terminal_std=27.63
+# mean_rel_diff=0.08%  std_rel_diff=0.44%
+# figure=results/figures/hpc_bands_ft3.png
 ```
+
+**Real FinisTerrae-3 run** (64 cores): 10⁹ paths in 376 s → **2.66×10⁶ paths/s**; the C engine's exact statistics agree with the NumPy kernel within sampling error (0.08% mean / 0.44% std).
+
+![GBM engine bands — FT3 10^9 paths](results/figures/hpc_bands_ft3.png)
 
 ### Pricing speedup benchmark
 
@@ -230,7 +235,7 @@ Monte Carlo projection of a sample asset (S0=100, μ=8%, σ=25%, 252 trading day
 - [x] Option pricing: Black-Scholes, Greeks and implied volatility
 - [x] HPC bridge: C GBM engine cross-validated against the NumPy kernel
 - [ ] Black-Scholes vs. Monte Carlo pricing comparison
-- [ ] Large-path FinisTerrae-3 runs feeding the bridge end to end
+- [x] Large-path FinisTerrae-3 runs feeding the bridge end to end
 
 ## License
 
