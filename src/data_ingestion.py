@@ -63,7 +63,10 @@ def fetch_daily_ohlcv(symbol: str, period: str = "1y", interval: str = "1d", tim
 
     frame = pd.DataFrame(
         {
-            "date": [datetime.fromtimestamp(ts, tz=timezone.utc).date() for ts in timestamps],
+            "date": [
+                datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
+                for ts in timestamps
+            ],
             "open": quote["open"],
             "high": quote["high"],
             "low": quote["low"],

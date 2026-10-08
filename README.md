@@ -47,6 +47,7 @@ quant-trading-models/
 │   ├── data_ingestion.py     # market data fetcher (REST) + dark-mode close/volume charts
 │   ├── black_scholes.py      # vectorized pricing, Greeks, IV (Newton-Raphson + bisection)
 │   ├── risk_metrics.py       # VaR, CVaR, Sharpe, Sortino, beta, drawdowns (dark mode)
+│   ├── tear_sheet.py         # full HTML performance tear sheets via quantstats
 │   └── hpc_bridge.py         # reads C GBM engine CSV, validates vs NumPy, dark-mode plot
 ├── benchmarks/
 │   ├── gbm_bands_ft3.csv     # REAL bands from the 10^9-path FT3 run
@@ -134,6 +135,18 @@ python -m src.risk_metrics --symbol AAPL --period 2y --benchmark SPY
 # sortino_ratio=1.33   beta_vs_SPY=1.07  var_95=2.66%  cvar_95=4.17%
 # max_drawdown=-33.43% figure=results/figures/drawdown.png
 ```
+
+### Performance tear sheet (HTML)
+
+Full quantstats tear sheet — Sharpe/Sortino, drawdowns, monthly heatmap, rolling metrics and benchmark comparison — rendered to a single self-contained HTML report:
+
+```bash
+python -m src.tear_sheet --symbol AAPL --period 2y --benchmark SPY
+# symbol=AAPL bars=501 benchmark=SPY
+# report=results/tear_sheet.html
+```
+
+**Sample report:** [results/tear_sheet_aapl.html](results/tear_sheet_aapl.html) — download and open in a browser (GitHub renders HTML as plain text; the file is self-contained).
 
 ### HPC bridge (C GBM engine -> Python)
 
