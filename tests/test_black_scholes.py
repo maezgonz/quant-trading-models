@@ -1,7 +1,7 @@
-import numpy as np
+﻿import numpy as np
 import pytest
 
-from src.black_scholes import bsCall, bsPut, implied_volatility
+from src.black_scholes import bs_call, bs_put, implied_volatility
 
 
 def test_black_scholes_pricing_scalar():
@@ -14,8 +14,8 @@ def test_black_scholes_pricing_scalar():
     q = 0.0
 
     # Computed standard call & put prices
-    call_res = bsCall(S0, K, r, T, sigma, q)
-    put_res = bsPut(S0, K, r, T, sigma, q)
+    call_res = bs_call(S0, K, r, T, sigma, q)
+    put_res = bs_put(S0, K, r, T, sigma, q)
 
     # Reference values (verified using financial calculators)
     # Call value should be ~6.8887, Delta ~0.5977
@@ -37,7 +37,7 @@ def test_black_scholes_pricing_vectorized():
     T = 0.5
     vol = 0.2
 
-    call_res = bsCall(spots, strikes, r, T, vol)
+    call_res = bs_call(spots, strikes, r, T, vol)
 
     assert isinstance(call_res["price"], np.ndarray)
     assert len(call_res["price"]) == 3
@@ -54,13 +54,13 @@ def test_black_scholes_boundary_conditions():
     sigma = 0.2
 
     # Call should equal intrinsic value (105 - 100 = 5.0) and Delta should be 1.0
-    call_res = bsCall(S0, K, r, T, sigma)
+    call_res = bs_call(S0, K, r, T, sigma)
     assert call_res["price"] == 5.0
     assert call_res["delta"] == 1.0
     assert call_res["vega"] == 0.0
 
     # Put should equal intrinsic value (max(0, 100 - 105) = 0.0) and Delta should be 0.0
-    put_res = bsPut(S0, K, r, T, sigma)
+    put_res = bs_put(S0, K, r, T, sigma)
     assert put_res["price"] == 0.0
     assert put_res["delta"] == 0.0
 
@@ -68,10 +68,10 @@ def test_black_scholes_boundary_conditions():
 def test_black_scholes_invalid_inputs():
     """Ensure invalid parameters raise an appropriate ValueError exception."""
     with pytest.raises(ValueError):
-        bsCall(-100.0, 100.0, 0.05, 0.5, 0.2)  # Negative spot
+        bs_call(-100.0, 100.0, 0.05, 0.5, 0.2)  # Negative spot
 
     with pytest.raises(ValueError):
-        bsCall(100.0, 100.0, 0.05, -0.5, 0.2)  # Negative time to maturity
+        bs_call(100.0, 100.0, 0.05, -0.5, 0.2)  # Negative time to maturity
 
 
 def test_implied_volatility_solver():
@@ -86,7 +86,7 @@ def test_implied_volatility_solver():
     iv = implied_volatility(S0, K, r, T, observed_price)
 
     # Reprice to ensure correct round-trip
-    repriced_res = bsCall(S0, K, r, T, iv)
+    repriced_res = bs_call(S0, K, r, T, iv)
     assert abs(repriced_res["price"] - observed_price) < 1e-5
 
 
@@ -100,5 +100,5 @@ def test_implied_volatility_bisection_fallback():
     observed_price = 0.5
 
     iv = implied_volatility(S0, K, r, T, observed_price)
-    repriced_res = bsCall(S0, K, r, T, iv)
+    repriced_res = bs_call(S0, K, r, T, iv)
     assert abs(repriced_res["price"] - observed_price) < 1e-4

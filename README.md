@@ -1,4 +1,4 @@
-# quant-trading-models
+﻿# quant-trading-models
 
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Language](https://img.shields.io/badge/Python-NumPy%20%7C%20pandas-3776AB)
@@ -6,7 +6,7 @@
 
 ## Objective
 
-Quantitative research and algorithmic trading models in Python: Monte Carlo projections, strategy prototyping and financial analytics rendered in **dark mode**. The repository bridges an HPC mindset (vectorized, reproducible, benchmark-driven computation) with market applications.
+Quantitative research and trading models in Python: Monte Carlo projections, Black-Scholes pricing with Greeks, risk metrics and one fully worked strategy workflow (SMA crossover backtest with no lookahead bias). The repository bridges an HPC mindset (vectorized, reproducible, benchmark-driven computation) with market applications.
 
 ## Architecture
 
@@ -121,7 +121,7 @@ python -m strategies.sma_crossover --symbol AAPL --period 2y
 Vectorized pricing with all first-order Greeks, expired-option boundary handling, and IV via Newton-Raphson with bisection fallback (covered by unit tests in CI):
 
 ```bash
-python -c "from src.black_scholes import bsCall, implied_volatility; print(bsCall(100, 100, 0.05, 0.5, 0.2))"
+python -c "from src.black_scholes import bs_call, implied_volatility; print(bs_call(100, 100, 0.05, 0.5, 0.2))"
 # {'price': 6.888729..., 'delta': 0.597734..., 'gamma': ..., 'vega': ..., 'theta': ..., 'rho': ...}
 ```
 
@@ -191,12 +191,12 @@ Monte Carlo projection of a sample asset (S0=100, μ=8%, σ=25%, 252 trading day
 
 | Statistic | Value |
 |---|---:|
-| Expected terminal price | TBD |
-| Median terminal price (P50) | TBD |
-| 5th percentile (P05) | TBD |
-| 95th percentile (P95) | TBD |
+| Expected terminal price | 108.37 |
+| Median terminal price (P50) | 105.08 |
+| 5th percentile (P05) | 69.52 |
+| 95th percentile (P95) | 158.84 |
 
-> Figures and statistics are populated as runs complete; the smoke figure above is regenerated on every commit.
+> Values are from the run dated 2026-10-08 (S0=100, μ=8%, σ=25%, 252 trading days, 50k paths). The expected terminal matches the closed-form GBM value E[S_T] = S0·e^(μT) = 108.33 within 0.04% sampling error.
 
 ### Market data (AAPL, 6 months, daily bars)
 

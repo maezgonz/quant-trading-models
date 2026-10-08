@@ -1,4 +1,4 @@
-"""Black-Scholes pricing, Greeks and implied volatility (vectorized NumPy)."""
+﻿"""Black-Scholes pricing, Greeks and implied volatility (vectorized NumPy)."""
 
 from __future__ import annotations
 
@@ -127,11 +127,11 @@ def bs_pricing(
 
 
 # Backward compatible aliases
-def bsCall(S0: Numeric, K: Numeric, r: float, T: Numeric, sigma: Numeric, q: float = 0.0) -> dict[str, Any]:
+def bs_call(S0: Numeric, K: Numeric, r: float, T: Numeric, sigma: Numeric, q: float = 0.0) -> dict[str, Any]:
     return bs_pricing(S0, K, r, T, sigma, q, option_type="C")
 
 
-def bsPut(S0: Numeric, K: Numeric, r: float, T: Numeric, sigma: Numeric, q: float = 0.0) -> dict[str, Any]:
+def bs_put(S0: Numeric, K: Numeric, r: float, T: Numeric, sigma: Numeric, q: float = 0.0) -> dict[str, Any]:
     return bs_pricing(S0, K, r, T, sigma, q, option_type="P")
 
 
@@ -216,21 +216,6 @@ def implied_volatility(
     return float(mid_sigma)
 
 
-# Backward compatible aliases for original files
-def viCall(S0: float, K: float, r: float, T: float, prima: float, q: float = 0.0) -> float:
-    try:
-        return implied_volatility(S0, K, r, T, prima, q, option_type="C")
-    except ValueError:
-        return 0.0
-
-
-def viPut(S0: float, K: float, r: float, T: float, prima: float, q: float = 0.0) -> float:
-    try:
-        return implied_volatility(S0, K, r, T, prima, q, option_type="P")
-    except ValueError:
-        return 0.0
-
-
 if __name__ == "__main__":
     # Test vectorized capabilities
     spots = np.array([100.0, 110.0, 120.0])
@@ -238,7 +223,7 @@ if __name__ == "__main__":
     tenor = 30 / 365.0
     vol = 0.25
 
-    results = bsCall(spots, strikes, 0.05, tenor, vol)
+    results = bs_call(spots, strikes, 0.05, tenor, vol)
     print("Vectorized Spot Prices:", spots)
     print("Vectorized Option Prices:", results["price"])
     print("Vectorized Option Deltas:", results["delta"])
@@ -247,5 +232,5 @@ if __name__ == "__main__":
     target_price = 4.5
     computed_iv = implied_volatility(100.0, 100.0, 0.05, tenor, target_price)
     print(f"\nTarget price: {target_price} -> Computed Implied Volatility: {computed_iv:.4%}")
-    repriced = bsCall(100.0, 100.0, 0.05, tenor, computed_iv)["price"]
+    repriced = bs_call(100.0, 100.0, 0.05, tenor, computed_iv)["price"]
     print(f"Repriced with computed IV: {repriced:.4f} (Error: {abs(repriced - target_price):.2e})")
