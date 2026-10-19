@@ -1,8 +1,11 @@
-﻿# quant-trading-models
+# quant-trading-models
 
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Language](https://img.shields.io/badge/Python-NumPy%20%7C%20pandas-3776AB)
 ![CI](https://github.com/maezgonz/quant-trading-models/actions/workflows/ci.yml/badge.svg)
+
+
+> **TL;DR (for non-technical visitors):** Python tools for pricing financial instruments and measuring risk. The C engine runs 2.66M simulations per second on a real supercomputer.
 
 ## Objective
 
@@ -164,7 +167,7 @@ python -m src.hpc_bridge --csv benchmarks/gbm_bands_ft3.csv --paths 200000
 
 **Real FinisTerrae-3 run** (64 cores): 10⁹ paths in 376 s → **2.66×10⁶ paths/s**; the C engine's exact statistics agree with the NumPy kernel within sampling error (0.08% mean / 0.44% std).
 
-![GBM engine bands — FT3 10^9 paths](results/figures/hpc_bands_ft3.png)
+
 
 ### Pricing speedup benchmark
 
