@@ -139,6 +139,22 @@ python -m src.risk_metrics --symbol AAPL --period 2y --benchmark SPY
 # max_drawdown=-33.43% figure=results/figures/drawdown.png
 ```
 
+### Hurst exponent — execution regime detection (arXiv:2610.23749)
+
+Rolling Hurst exponent over price series, classifying the current regime (momentum / reversive / random walk) and recommending the execution schedule shape. Implements the front-loaded schedule formula from Kulkarni & Nayar (2026):
+
+```bash
+python -m src.hurst_execution --symbol AAPL --period 2y
+# latest_h=0.6550 regime=MOMENTUM (superdiffusive)
+# Front-load execution: 61.8% of the order in the first quarter (TWAP would be 25.0%)
+```
+
+**Sample output — AAPL rolling Hurst:**
+
+![AAPL rolling Hurst exponent](results/figures/hurst_aapl.png)
+
+Also see the **[backtest-to-live checklist](docs/backtest_checklist.md)** — 10 controls adapted from Vidovich & Zerjal (arXiv:2610.21846) guarding against the six backtest defects they found in production.
+
 ### Performance tear sheet (HTML)
 
 Full quantstats tear sheet — Sharpe/Sortino, drawdowns, monthly heatmap, rolling metrics and benchmark comparison — rendered to a single self-contained HTML report:
